@@ -1,0 +1,63 @@
+#!/bin/bash
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
+
+yum list  >> /dev/null || { echo 'Configure Yum' ; exit 1;}
+yum update -y 
+yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
+systemctl enable libvirtd && systemctl start libvirtd
+
+echo "Configuring Network Bridge"
+interfacename="$(ifconfig | cut -d ':' -f1 | grep ens)"
+echo "Modifying /etc/sysconfig/network-scripts/$interfacename"
+echo "$interfacename is going to be modified- If you loose connection to vm, restore file from /tmp/backup manually"
+mkdir -p /tmp/backup
+cp /etc/sysconfig/network-scripts/ifcfg-$interfacename /tmp/backup/
+
+ipaddress=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+subnet=$(ifconfig $interfacename | grep 'netmask' |  awk '{print $4}')
+gateway=$(netstat -rn | grep UG  | awk '{print $2}')
+
+
+cat <<EOT > /etc/sysconfig/network-scripts/ifcfg-br0
+DEVICE="br0"
+BOOTPROTO="static" 
+ONBOOT="yes"  
+TYPE="Bridge"
+DELAY="0" 
+IPADDR=$ipaddress
+NETMASK=$subnet
+EOT
+
+cat <<EOT > /etc/sysconfig/network
+NETWORKING=YES
+HOSTNAME=$hostname
+GATEWAY=$gateway
+EOT
+
+
+echo "" 
+cat /etc/sysconfig/network-scripts/ifcfg-br0
+echo ""
+cat  /etc/sysconfig/network
+#echo "BOOTPROTO=static"        >> /etc/sysconfig/network-scripts/ifcfg-br0
+#echo "ONBOOT=yes"              >> /etc/sysconfig/network-scripts/ifcfg-br0
+#echo "TYPE=Bridge"             >> /etc/sysconfig/network-scripts/ifcfg-br0
+#echo "DELAY=0"         >> /etc/sysconfig/network-scripts/ifcfg-br0
+
+
+echo ""
+echo "Enabling IP forwarding"
+sed -i -e 's/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/g' /etc/sysctl.conf
+
+echo""
+echo "Removing IP entries from Ethernet interface"
+sed -i -e 's/IPADDR/#IPADDR/g' /etc/sysconfig/network-scripts/ifcfg-$interfacename
+sed -i -e 's/NETMASK/#NETMASK/g' /etc/sysconfig/network-scripts/ifcfg-$interfacename
+sed -i -e 's/BOOTPROTO="dhcp"/BOOTPROTO="none"/g' /etc/sysconfig/network-scripts/ifcfg-$interfacename
+
+grep -q -F "BRIDGE=br0" /etc/sysconfig/network-scripts/ifcfg-$interfacename || echo "BRIDGE=br0" >>  /etc/sysconfig/network-scripts/ifcfg-$interfacename
+service network restart
