@@ -1,8 +1,19 @@
 #!/bin/bash
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
+   echo "This script must run as root user " 
    exit 1
 fi
+
+echo ""
+echo "Please Copy RHEL/CentOS7 iso in /tmp" 
+
+if [ -f /tmp/*.iso ]; then
+        echo " ISO file found in /tmp "
+else
+        echo "ISO file not found in /tmp .. Exiting.."
+        exit 1
+fi
+
 yum list  >> /dev/null || { echo 'Configure Yum' ; exit 1;}
 
 yum update -y 
@@ -110,15 +121,7 @@ mkdir -p /opt/vm1
 qemu-img create -f qcow2 /opt/vm1/vm1.qcow2 900G
 
 
-echo ""
-echo "Please Copy RHEL/CentOS iso in /tmp" 
 
-if [ -f /tmp/*.iso ]; then
-        echo " ISO file found in /tmp "
-else
-        echo "ISO file not found in /tmp .. Exiting.."
-        exit 1
-fi
 
 isofile=$(ls -lrt /tmp | grep iso | cut -d ' ' -f11 )
 echo ""
