@@ -15,3 +15,8 @@ What it does:
 
 What it doesn't:
 1) anything not written in 'what it does'
+
+
+How to use it:
+1) Copy kvm.sh to host machine
+2) chmod +x kvm.sh && ./kvm.sh 
