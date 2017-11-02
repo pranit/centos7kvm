@@ -17,7 +17,7 @@ fi
 yum list  >> /dev/null || { echo 'Configure Yum' ; exit 1;}
 
 yum update -y 
-yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
+yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install net-tools
 systemctl enable libvirtd && systemctl start libvirtd
 
 echo "Configuring Network Bridge"
