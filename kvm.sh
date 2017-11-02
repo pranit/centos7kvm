@@ -119,7 +119,8 @@ echo "kickstart file creation complete"
 mkdir -p /opt/vm1
 qemu-img create -f qcow2 /opt/vm1/vm1.qcow2 900G
 
-isofile=$(ls -lrt /tmp | grep iso | cut -d ' ' -f11 )
+#isofile=$(ls -lrt /tmp | grep iso | cut -d ' ' -f11 )
+isofile=$(ls /tmp -t | head -1)
 echo ""
 echo "We're going to use $isofile for VM installation"
 
