@@ -113,15 +113,11 @@ rootpw password
 @core
 %end
 EOT
-
 echo ""
 echo "kickstart file creation complete"
 
 mkdir -p /opt/vm1
 qemu-img create -f qcow2 /opt/vm1/vm1.qcow2 900G
-
-
-
 
 isofile=$(ls -lrt /tmp | grep iso | cut -d ' ' -f11 )
 echo ""
@@ -129,6 +125,3 @@ echo "We're going to use $isofile for VM installation"
 
 mount -o loop /tmp/$isofile /media
 virt-install --network bridge=br0 --name vm1 --ram=1024 --vcpus=1 --disk path=/opt/vm1/vm1.qcow2,format=qcow2 --graphics none --location=/tmp/$isofile --os-type=linux  --initrd-inject=/tmp/backup/vm1.cfg  --extra-args='ks=file:/vm1.cfg console=ttyS0,115200n8 serial' --debug
-
-
-#virt-install --network bridge=br0 --name vm1 --ram=1024 --vcpus=1 --disk path=/opt/vm1/vm1.qcow2,format=qcow2 --graphics none --cdrom=/tmp/centos.iso  --os-type=linux
