@@ -97,6 +97,7 @@ reboot
 bootloader --location=mbr
 zerombr
 clearpart --all --initlabel
+part biosboot --fstype=biosboot --size=1 
 part swap --asprimary --fstype="swap" --size=1024
 part /boot --fstype ext4 --size=500
 part pv.01 --size=1 --grow
